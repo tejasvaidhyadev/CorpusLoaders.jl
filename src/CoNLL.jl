@@ -6,6 +6,85 @@ struct CoNLL{S}
     devpath::String
 end
 
+"""
+    CoNLL()
+
+Creates a CoNLL instance for lazy loading the corpus.
+
+# Example Usage
+
+```jldoctest
+train = load(CoNLL(), "train") # training set
+test = load(CoNLL(), "test") # test set
+dev = load(CoNLL(), "dev") # dev set
+
+julia> no_sent_boundary = flatten_levels(train, lvls(CoNLL, :sentence)) |> full_consolidate
+
+julia> typeof(no_sent_boundary)
+Document{Array{Array{CorpusLoaders.NERTaggedWord,1},1},String}
+
+julia> no_sent_boundary[1]
+469-element Array{CorpusLoaders.NERTaggedWord,1}:
+ CorpusLoaders.NERTaggedWord("B-ORG", "B-NP", "NNP", "EU")
+ CorpusLoaders.NERTaggedWord("O", "B-VP", "VBZ", "rejects")
+ ⋮
+ CorpusLoaders.NERTaggedWord("O", "I-NP", "NN", "percent")
+ CorpusLoaders.NERTaggedWord("O", "B-PP", "IN", "of")
+ CorpusLoaders.NERTaggedWord("O", "B-NP", "JJ", "overall")
+ CorpusLoaders.NERTaggedWord("O", "I-NP", "NNS", "imports")
+ CorpusLoaders.NERTaggedWord("O", "O", ".", ".")
+
+julia> dataset = flatten_levels(train, lvls(CoNLL, :document)) |> full_consolidate
+
+julia> typeof(dataset)
+Document{Array{Array{CorpusLoaders.NERTaggedWord,1},1},String}
+
+julia> length(dataset) # Total number of sentences.
+14041
+
+julia> for tagged_word in dataset[1]
+           ner_tag = named_entity(tagged_word)
+           w = word(tagged_word)
+           println("$w => $ner_tag")
+       end
+EU => B-ORG
+rejects => O
+German => B-MISC
+call => O
+to => O
+boycott => O
+British => B-MISC
+lamb => O
+. => O
+
+julia> for tagged_word in dataset[1]
+           pos_tag = part_of_speech(tagged_word)
+           w = word(tagged_word)
+           println("$w => $pos_tag")
+       end
+EU => NNP
+rejects => VBZ
+German => JJ
+call => NN
+to => TO
+boycott => VB
+British => JJ
+lamb => NN
+. => .
+```
+
+The CoNLL-2003 shared task data files is made from the the Reuters Corpus, is a collection of news wire articles.
+
+Each word has been tagger three labels to it - a part-of-speech (POS) tag, a syntactic chunk tag and the named entity tag. 
+
+The chunk tags and the named entity tags are tagged with the BIO1 or IOB format.
+
+
+Please cite the following publication if you use the corpora:
+        Erik F. Tjong Kim Sang, Fien De Meulder. "Introduction to the CoNLL-2003 Shared Task: Language-Independent Named Entity Recognition." Proceedings of CoNLL-2003, Edmonton, Canada, 2003.
+https://www.clips.uantwerpen.be/conll2003/pdf/14247tjo.pdf
+
+"""
 function CoNLL(dirpath, year=2003)
     @assert(isdir(dirpath), dirpath)
 
